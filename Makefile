@@ -27,7 +27,7 @@ build:
     fi
 
 kernel: build
-	@qemu-system-i386 -kernel ${KERNEL_OUT} -monitor stdio
+	@qemu-system-i386 -kernel ${KERNEL_OUT}
 
 image: build
 	mkdir -p iso/boot/grub
@@ -45,3 +45,12 @@ clean:
 	rm -rf $(BIN)
 	rm -rf iso
 	rm -f $(NAME).iso
+
+docker_build:
+	docker build -t kfs .
+
+docker_run:
+	docker run kfs
+
+docker_exec:
+	docker exec -it ADD_PLACEHOLDER_HERE /bin/bash
