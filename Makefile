@@ -21,13 +21,18 @@ build:
 	$(CC) $(CFLAGS) -c $(SRC) -o $(BIN)kernel.o -ggdb
 	ld -m elf_i386 -T$(LINKER) -o $(BIN)kernel.bin $(BIN)boot.o $(BIN)kernel.o
 	@if grub-file --is-x86-multiboot $(BIN)kernel.bin; then \
-        echo multiboot confirmed; \
-    else \
-        echo the file is not multiboot; \
-    fi
+		echo multiboot confirmed; \
+	else \
+		echo the file is not multiboot; \
+		exit 1; \
+	fi
+
 
 kernel: build
-	@qemu-system-i386 -kernel ${KERNEL_OUT}
+	@qemu-system-i386 -kernel bin/kernel.bin
+
+kernal_without_graphics:
+	@qemu-system-i386 -kernel bin/kernel.bin -nographic
 
 image: build
 	mkdir -p iso/boot/grub
