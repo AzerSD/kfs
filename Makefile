@@ -9,6 +9,12 @@ CFLAGS = -Wall -Wextra -Woverflow -m32 -ffreestanding -fno-builtin -nostdlib -no
 
 all: build
 
+linux:
+	sudo apt install xorriso
+	sudo apt install nasm
+	sudo apt install qemu qemu-system-i386
+	sudo apt install mtools
+
 build:
 	@mkdir -p $(BIN)
 	nasm -f elf32 $(ASM) -o $(BIN)boot.o
