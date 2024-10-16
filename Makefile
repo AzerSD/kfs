@@ -21,7 +21,7 @@ build:
     fi
 
 kernel: build
-	@qemu-system-i386 -kernel ${KERNEL_OUT} -monitor stdio
+	@qemu-system-i386 -kernel ${KERNEL_OUT} -d int -no-reboot -no-shutdown
 
 image: build
 	mkdir -p iso/boot/grub
