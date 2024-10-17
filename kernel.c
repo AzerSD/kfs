@@ -1,58 +1,137 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "kernel.h"
+#include "keyboard.h"
 
-// #define VIDEO_MEMORY (char*) 0xb8000
-#define SCREEN_WIDTH 80
-#define SCREEN_HEIGHT 25
-#define WHITE_ON_BLACK 0x07
+uint32 vga_index;
+static uint32 next_line_index = 1;
+uint8 g_fore_color = WHITE;
+uint8 g_back_color = BLUE;
 
-char *VIDEO_MEMORY = (char*) 0xb8000;
-void clear_screen() {
-    for (int i = 0; i < SCREEN_WIDTH * 25 * 2; i += 2) {
-        VIDEO_MEMORY[i] = ' ';
-        VIDEO_MEMORY[i + 1] = WHITE_ON_BLACK;
+
+// Function to create a VGA buffer entry
+uint16 vga_entry(char c, uint8 fore_color, uint8 back_color)
+{
+    return (back_color << 12) | (fore_color << 8) | c;
+}
+
+// Clear VGA buffer with given colors
+void clear_vga_buffer(uint16 *buffer, uint8 fore_color, uint8 back_color)
+{
+    for (uint32 i = 0; i < BUFSIZE; i++) {
+        buffer[i] = vga_entry(' ', fore_color, back_color);
     }
 }
 
-void print_at(const char *message, int x, int y) {
-    int i = 0;
-    while (message[i] != '\0') {
-        int pos = ((y * SCREEN_WIDTH) + x + i) * 2;
-        if (pos < SCREEN_WIDTH * 25 * 2) {
-            VIDEO_MEMORY[pos] = message[i];
-            VIDEO_MEMORY[pos + 1] = WHITE_ON_BLACK;
-        }
-        i++;
+// Initialize VGA by setting up the buffer and clearing it
+void init_vga(uint8 fore_color, uint8 back_color)
+{
+    vga_buffer = (uint16*) VGA_ADDRESS;
+    clear_vga_buffer(vga_buffer, fore_color, back_color);
+}
+
+// Increase vga_index by width of row(80)
+void print_new_line()
+{
+  if(next_line_index >= 55){
+    next_line_index = 0;
+    clear_vga_buffer(vga_buffer, g_fore_color, g_back_color);
+  }
+  vga_index = 80*next_line_index;
+  next_line_index++;
+}
+
+//assign ascii character to video buffer
+void putchar(char ch)
+{
+  vga_buffer[vga_index] = vga_entry(ch, g_fore_color, g_back_color);
+  vga_index++;
+}
+
+
+uint32 strlen(const char* str)
+{
+  uint32 length = 0;
+  while(str[length])
+    length++;
+  return length;
+}
+
+
+//print string by calling putchar
+void putstring(char *str)
+{
+  uint32 index = 0;
+  while(str[index]){
+    putchar(str[index]);
+    index++;
+  }
+}
+
+
+
+// I/O port functions from your code
+uint8 inb(uint16 port) {
+    uint8 ret;
+    asm volatile("inb %1, %0" : "=a"(ret) : "d"(port));
+    return ret;
+}
+
+void outb(uint16 port, uint8 data) {
+    asm volatile("outb %0, %1" : : "a"(data), "d"(port));
+}
+
+char get_input_keycode()
+{
+  char ch = 0;
+  while((ch = inb(KEYBOARD_PORT)) != 0){
+    if(ch > 0)
+      return ch;
+  }
+  return ch;
+}
+
+/*
+keep the cpu busy for doing nothing(nop)
+so that io port will not be processed by cpu
+here timer can also be used, but lets do this in looping counter
+*/
+void wait_for_io(uint32 timer_count)
+{
+  while(1){
+    asm volatile("nop");
+    timer_count--;
+    if(timer_count <= 0)
+      break;
     }
 }
 
-void delay() {
-    for (volatile int i = 0; i < 10000000; i++);
+void sleep(uint32 timer_count)
+{
+  wait_for_io(timer_count);
 }
 
-void kernel_main() {
-    const char *ascii_art[] = {
-        " __    __   ______         __         ______          ",
-        "/  |  /  | /      \\       /  |       /      \\        ",
-        "$$ |  $$ |/$$$$$$  |      $$ |   __ /$$$$$$  |_______ ",
-        "$$ |__$$ |$$____$$ |      $$ |  /  |$$ |_ $$//       |",
-        "$$    $$ | /    $$/       $$ |_/$$/ $$   |  /$$$$$$$/ ",
-        "$$$$$$$$ |/$$$$$$/        $$   $$<  $$$$/   $$      \\ ",
-        "      $$ |$$ |_____       $$$$$$  \\ $$ |     $$$$$$  |",
-        "      $$ |$$       |      $$ | $$  |$$ |    /     $$/ ",
-        "      $$/ $$$$$$$$/       $$/   $$/ $$/     $$$$$$$/  "
-    };
-    int num_lines = 9;
-    int max_length = 58; // The longest line in ASCII art
-    
-    while (1) {
-        for (int x = 0; x < SCREEN_WIDTH - max_length; x++) {
-            clear_screen();
-            for (int y = 0; y < num_lines; y++) {
-                print_at(ascii_art[y], x, y);
-            }
-            delay();
-        }
+void test_input()
+{
+  char ch = 0;
+  char keycode = 0;
+  do{
+    keycode = get_input_keycode();
+    if(keycode == KEY_ENTER){
+      print_new_line();
+    }else{
+      ch = get_ascii_char(keycode);
+      putchar(ch);
     }
+    sleep(0x022FFFFF);
+  }while(ch > 0);
+}
+
+void kernel_main()
+{
+  //first init vga with fore & back colors
+  init_vga(g_fore_color, g_back_color);
+  putstring("Hello World!");
+  print_new_line();
+  putstring("Type here, one key per second");
+  print_new_line();
+  test_input();
 }
