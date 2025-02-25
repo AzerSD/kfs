@@ -4,7 +4,7 @@ BIN = bin/
 SRC = kernel.c
 LINKER = linker.ld
 CC = gcc
-CFLAGS = -Wall -Wextra -Woverflow -m32 -ffreestanding -fno-builtin -nostdlib -nodefaultlibs
+CFLAGS = -Wall -Wextra -Woverflow -m32 -ffreestanding  -nostdlib -fno-builtin -fno-exception -fno-stack-protector -fno-rtti -nostdlib -nodefaultlibs
 
 
 all: build
