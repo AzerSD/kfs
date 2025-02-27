@@ -1,5 +1,4 @@
 section .multiboot
-align 8
 dd 0xE85250D6   ; Multiboot 2 Magic Number
 dd 0             ; Architecture (0 for i386)
 dd header_end - header_start  ; Header Length
@@ -30,3 +29,5 @@ section .bss
 align 16
 stack_space: resb 16384  ; 16 KB stack
 stack_size equ $ - stack_space
+
+

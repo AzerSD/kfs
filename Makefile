@@ -29,8 +29,8 @@ build:
 	fi
 
 
-kernel: build
-	@qemu-system-i386 -kernel bin/kernel.bin
+kernel: image build
+	@qemu-system-i386 -cdrom $(NAME).iso
 
 kernal_without_graphics:
 	@qemu-system-i386 -kernel bin/kernel.bin -nographic
