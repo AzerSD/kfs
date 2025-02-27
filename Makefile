@@ -4,7 +4,8 @@ BIN = bin/
 SRC = kernel.c
 LINKER = linker.ld
 CC = gcc
-CFLAGS = -Wall -Wextra -Woverflow -m32 -ffreestanding  -nostdlib -fno-builtin -fno-exception -fno-stack-protector -fno-rtti -nostdlib -nodefaultlibs
+CFLAGS = -Wall -Wextra -Woverflow -m32 -ffreestanding  -nostdlib -fno-builtin -fno-exceptions -fno-stack-protector -nostdlib -nodefaultlibs
+# -fno-rtti 
 
 
 all: build
@@ -20,7 +21,7 @@ build:
 	nasm -f elf32 $(ASM) -o $(BIN)boot.o
 	$(CC) $(CFLAGS) -c $(SRC) -o $(BIN)kernel.o -ggdb
 	ld -m elf_i386 -T$(LINKER) -o $(BIN)kernel.bin $(BIN)boot.o $(BIN)kernel.o
-	@if grub-file --is-x86-multiboot $(BIN)kernel.bin; then \
+	@if grub-file --is-x86-multiboot2 $(BIN)kernel.bin; then \
 		echo multiboot confirmed; \
 	else \
 		echo the file is not multiboot; \

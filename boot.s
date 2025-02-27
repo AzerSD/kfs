@@ -1,8 +1,19 @@
 section .multiboot
-align 4
-dd 0x1BADB002     ; Magic number
-dd 0x0            ; Flags (0 for now)
-dd - (0x1BADB002 + 0x0) ; Checksum
+align 8
+dd 0xE85250D6   ; Multiboot 2 Magic Number
+dd 0             ; Architecture (0 for i386)
+dd header_end - header_start  ; Header Length
+dd -(0xE85250D6 + 0 + (header_end - header_start)) ; Checksum
+
+header_start:
+
+; Multiboot 2 required end tag
+align 8
+dw 0  ; Tag type (End tag)
+dw 0  ; Reserved
+dd 8  ; Size of the tag (including size field)
+
+header_end:
 
 global _start
 section .text
@@ -19,4 +30,3 @@ section .bss
 align 16
 stack_space: resb 16384  ; 16 KB stack
 stack_size equ $ - stack_space
- 

@@ -4,7 +4,7 @@
 
 void kernel_main() {
     char *video_memory = (char*) 0xb8000;
-    const char *message = "Hello, World!\n\azsd"; // Notice new line is not supported.
+    const char *message = "Hello, World!\n\azsd";
     int i = 0;
     
     while (message[i] != '\0') {
